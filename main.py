@@ -7,7 +7,11 @@ from database import engine, Base, get_db
 from utils import generate_childhood, generate_historical_conflict, generate_historical_context, generate_profession
 
 
-app = FastAPI()
+app = FastAPI(
+    title="Medieval Stories API",
+    description="Generate historical medieval stories based on social class",
+    version="1.0.0"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,8 +20,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-Base.metadata.create_all(bind=engine)
 
 
 @app.get("/")
@@ -69,4 +71,20 @@ def read_stories(
         "total": total,
         "skip": skip,
         "limit": limit
+    }
+
+
+@app.delete("/stories/{story_id}")
+def delete_story(
+    story_id: int,
+    db: Session = Depends(get_db)
+):
+
+    story = db.query(Story).filter(Story.id == story_id).first()
+
+    db.delete(story)
+    db.commit()
+
+    return {
+        "deleted_id": story_id
     }
